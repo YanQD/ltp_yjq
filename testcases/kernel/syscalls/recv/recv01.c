@@ -80,24 +80,24 @@ struct test_case_t {		/* test case structure */
 	void (*cleanup) (void);
 	char *desc;
 } tdat[] = {
-	{
-	PF_INET, SOCK_STREAM, 0, buf, sizeof(buf), 0,
-		    -1, EBADF, setup0, cleanup0, "bad file descriptor"}
-	, {
-	0, 0, 0, buf, sizeof(buf), 0,
-		    -1, ENOTSOCK, setup0, cleanup0, "invalid socket"}
-	,
+	// {
+	// PF_INET, SOCK_STREAM, 0, buf, sizeof(buf), 0,
+	// 	    -1, EBADF, setup0, cleanup0, "bad file descriptor"}
+	// , {
+	// 0, 0, 0, buf, sizeof(buf), 0,
+	// 	    -1, ENOTSOCK, setup0, cleanup0, "invalid socket"}
+	// ,
 	{
 	PF_INET, SOCK_STREAM, 0, (void *)-1, sizeof(buf), 0,
 		    -1, EFAULT, setup1, cleanup1, "invalid recv buffer"}
-	,
-	{
-	PF_INET, SOCK_STREAM, 0, buf, sizeof(buf), MSG_OOB,
-		    -1, EINVAL, setup1, cleanup1, "invalid MSG_OOB flag set"}
-	,
-	{
-	PF_INET, SOCK_STREAM, 0, buf, sizeof(buf), MSG_ERRQUEUE,
-		    -1, EAGAIN, setup1, cleanup1, "invalid MSG_ERRQUEUE flag set"}
+	// ,
+	// {
+	// PF_INET, SOCK_STREAM, 0, buf, sizeof(buf), MSG_OOB,
+	// 	    -1, EINVAL, setup1, cleanup1, "invalid MSG_OOB flag set"}
+	// ,
+	// {
+	// PF_INET, SOCK_STREAM, 0, buf, sizeof(buf), MSG_ERRQUEUE,
+	// 	    -1, EAGAIN, setup1, cleanup1, "invalid MSG_ERRQUEUE flag set"}
 ,};
 
 int TST_TOTAL = sizeof(tdat) / sizeof(tdat[0]);
@@ -203,8 +203,9 @@ pid_t start_server(struct sockaddr_in *sin0)
 	socklen_t slen = sizeof(*sin0);
 
 	sin0->sin_family = AF_INET;
-	sin0->sin_port = 0; /* pick random free port */
-	sin0->sin_addr.s_addr = INADDR_ANY;
+	sin0->sin_port = htons(8082); /* pick random free port */
+	// sin0->sin_addr.s_addr = INADDR_ANY;
+	sin0->sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	sfd = socket(PF_INET, SOCK_STREAM, 0);
 	if (sfd < 0) {

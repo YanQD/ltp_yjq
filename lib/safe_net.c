@@ -112,6 +112,8 @@ int safe_socket(const char *file, const int lineno, void (cleanup_fn)(void),
 
 	rval = socket(domain, type, protocol);
 
+	tst_resm(TINFO, "socket(%d, %d, %d) = %d", domain, type, protocol, rval);
+
 	if (rval == -1) {
 		switch (errno) {
 		case EPROTONOSUPPORT:
@@ -189,7 +191,11 @@ int safe_setsockopt(const char *file, const int lineno, int sockfd, int level,
 {
 	int rval;
 
+	// lfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)
 	rval = setsockopt(sockfd, level, optname, optval, optlen);
+
+	tst_resm(TINFO, "setsockopt(%d, %d, %d, %p, %d) = %d",
+		 sockfd, level, optname, optval, optlen, rval);
 
 	if (rval == -1) {
 		tst_brkm_(file, lineno, TBROK | TERRNO, NULL,
@@ -332,6 +338,10 @@ int safe_bind(const char *file, const int lineno, void (cleanup_fn)(void),
 	for (i = 0; i < 120; i++) {
 		ret = bind(socket, address, address_len);
 
+		tst_resm(TINFO, "bind(%d, %s, %d) = %d", socket,
+			tst_sock_addr(address, address_len, buf, sizeof(buf)),
+			address_len, ret);
+
 		if (!ret)
 			return 0;
 
@@ -383,6 +393,8 @@ int safe_listen(const char *file, const int lineno, void (cleanup_fn)(void),
 			backlog, rval);
 	}
 
+	tst_resm(TINFO, "listen(%d, %d) = %d", socket, backlog, rval);
+
 	return rval;
 }
 
@@ -411,8 +423,14 @@ int safe_connect(const char *file, const int lineno, void (cleanup_fn)(void),
 	int rval;
 	char buf[128];
 
+	tst_resm(TINFO, "addr %d, addreln %d" , addr, addrlen);
+
 	rval = connect(sockfd, addr, addrlen);
 
+	tst_resm(TINFO, "connect(%d, %s, %d) return value %d", sockfd,
+		tst_sock_addr(addr, addrlen, buf, sizeof(buf)),
+		addrlen, rval);
+	
 	if (rval == -1) {
 		tst_brkm_(file, lineno, TBROK | TERRNO, cleanup_fn,
 			"connect(%d, %s, %d) failed", sockfd,
@@ -436,6 +454,9 @@ int safe_getsockname(const char *file, const int lineno,
 	char buf[128];
 
 	rval = getsockname(sockfd, addr, addrlen);
+
+	tst_resm(TINFO, "getsockname(%d, %s, %d) = %d", sockfd,
+		tst_sock_addr(addr, *addrlen, buf, sizeof(buf)), *addrlen, rval);
 
 	if (rval == -1) {
 		tst_brkm_(file, lineno, TBROK | TERRNO, cleanup_fn,
@@ -502,14 +523,14 @@ unsigned short tst_get_unused_port(const char *file, const int lineno,
 	switch (family) {
 	case AF_INET:
 		addr4->sin_family = AF_INET;
-		addr4->sin_port = 0;
+		addr4->sin_port = 28575; // 端口设为0，让系统自动分配
 		addr4->sin_addr.s_addr = INADDR_ANY;
 		slen = sizeof(*addr4);
 		break;
 
 	case AF_INET6:
 		addr6->sin6_family = AF_INET6;
-		addr6->sin6_port = 0;
+		addr6->sin6_port = 28575; // 端口设为0，让系统自动分配
 		addr6->sin6_addr = in6addr_any;
 		slen = sizeof(*addr6);
 		break;
@@ -523,20 +544,28 @@ unsigned short tst_get_unused_port(const char *file, const int lineno,
 
 	sock = safe_socket(file, lineno, cleanup_fn, addr->sa_family, type, 0);
 
+	tst_resm(TINFO, "sock %d", sock);
+
 	if (sock < 0)
 		return sock;
 
 	ret = safe_bind(file, lineno, cleanup_fn, sock, addr, slen);
+
+	tst_resm(TINFO, "ret1 %d", ret);
 
 	if (ret)
 		return ret;
 
 	ret = safe_getsockname(file, lineno, cleanup_fn, sock, addr, &slen);
 
+	tst_resm(TINFO, "ret2 %d", ret);
+
 	if (ret)
 		return ret;
 
 	ret = safe_close(file, lineno, cleanup_fn, sock);
+
+	tst_resm(TINFO, "ret3 %d", ret);
 
 	if (ret)
 		return ret;

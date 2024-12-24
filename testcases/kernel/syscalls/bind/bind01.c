@@ -36,32 +36,41 @@ static struct test_case {
 	int experrno;
 	char *desc;
 } tcases[] = {
+	//测试无效的地址长度
 	{ &inet_socket, (struct sockaddr *)&sin1, 3, -1,
 	  EINVAL, "invalid salen" },
+	// 测试无效的 socket
 	{ &dev_null, (struct sockaddr *)&sin1, sizeof(sin1), -1,
 	  ENOTSOCK, "invalid socket" },
+	// 测试任意端口绑定
 	{ &inet_socket, (struct sockaddr *)&sin2, sizeof(sin2), 0,
 	  0, "INADDR_ANYPORT"},
+	//测试域类型不匹配
 	{ &inet_socket, (struct sockaddr *)&sun, sizeof(sun), -1,
 	  EAFNOSUPPORT, "UNIX-domain of current directory" },
+	// 测试非本地地址
 	{ &inet_socket, (struct sockaddr *)&sin3, sizeof(sin3), -1,
 	  EADDRNOTAVAIL, "non-local address" },
+	// 测试无效文件描述符
 	{ &fd_ebadf, (struct sockaddr *)&sin1, sizeof(sin1), -1,
 	  EBADF, "sockfd is not a valid file descriptor" },
+	// 测试路径组件错误
 	{ &fd_enotdir, (struct sockaddr *)&sock_enotdir, sizeof(sock_enotdir), -1,
 	  ENOTDIR, "a component of addr prefix is not a directory"},
 };
 
 static void verify_bind(unsigned int nr)
 {
+	tst_res(TINFO, "checkpoint03");
 	struct test_case *tcase = &tcases[nr];
 
+	tst_res(TINFO, "checkpoint04");
 	if (tcase->experrno) {
 		TST_EXP_FAIL(bind(*tcase->socket_fd, tcase->sockaddr, tcase->salen),
 				tcase->experrno, "%s", tcase->desc);
 	} else {
 		TST_EXP_PASS(bind(*tcase->socket_fd, tcase->sockaddr, tcase->salen),
-				"%s", tcase->desc);
+				"%s", tcase->desc);	
 		SAFE_CLOSE(inet_socket);
 		inet_socket = SAFE_SOCKET(PF_INET, SOCK_STREAM, 0);
 	}
@@ -87,10 +96,17 @@ static void test_setup(void)
 	sun.sun_family = AF_UNIX;
 	strncpy(sun.sun_path, ".", sizeof(sun.sun_path));
 
+	tst_res(TINFO, "checkpoint01");
+
 	SAFE_TOUCH(DIR_ENOTDIR, 0777, NULL);
+
+	tst_res(TINFO, "checkpoint01");
+
 	sock_enotdir.sun_family = AF_UNIX;
 	strncpy(sock_enotdir.sun_path, DIR_ENOTDIR "/" TEST_ENOTDIR,
 		sizeof(sock_enotdir.sun_path));
+
+	tst_res(TINFO, "checkpoint02");
 
 	inet_socket = SAFE_SOCKET(PF_INET, SOCK_STREAM, 0);
 	dev_null = SAFE_OPEN("/dev/null", O_WRONLY);

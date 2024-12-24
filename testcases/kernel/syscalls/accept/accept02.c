@@ -42,6 +42,7 @@ static struct group_req *mc_group;
 
 static void *server_thread(void *arg)
 {
+	tst_res(TINFO, "server_thread");
 	int op, op_len, mc_group_len;
 
 	op = 1;
@@ -57,9 +58,19 @@ static void *server_thread(void *arg)
 	SAFE_BIND(server_sockfd, (struct sockaddr *)server_addr, addr_len);
 	SAFE_LISTEN(server_sockfd, 1);
 
+	tst_res(TINFO, "*xxxxxxxxxxx*");
+
+	// 唤醒等待在指定checkpoint上的进程或线程
 	TST_CHECKPOINT_WAKE(0);
 
+	tst_res(TINFO, "Accepted Accepted Accepted");
+
 	TEST(accept(server_sockfd, (struct sockaddr *)client_addr, &addr_len));
+
+	tst_res(TINFO, "Accepted Accepted");
+
+	tst_res(TINFO, "Accepted %d, %d", TST_RET, TST_ERR);
+
 	if (TST_RET == -1)
 		tst_brk(TBROK | TTERRNO, "Could not accept connection");
 
@@ -77,11 +88,13 @@ static void *server_thread(void *arg)
 		tst_brk(TBROK | TTERRNO, "setsockopt() failed unexpectedly");
 
 	SAFE_CLOSE(server_sockfd);
+
 	return arg;
 }
 
 static void *client_thread(void *arg)
 {
+	tst_res(TINFO, "client_thread");
 	client_sockfd = SAFE_SOCKET(AF_INET, SOCK_STREAM, 0);
 	SAFE_BIND(client_sockfd, (struct sockaddr *)client_addr, addr_len);
 
@@ -98,8 +111,15 @@ static void run(void)
 	server_addr->sin_port = server_port;
 	client_addr->sin_port = htons(0);
 
+	tst_res(TINFO, "server_addr->sin_port = %d",
+		ntohs(server_addr->sin_port));
+	tst_res(TINFO, "client_addr->sin_port = %d",
+		ntohs(client_addr->sin_port));
+
 	SAFE_PTHREAD_CREATE(&server_thr, NULL, server_thread, NULL);
+	tst_res(TINFO, "start start start start!");
 	TST_CHECKPOINT_WAIT(0);
+	tst_res(TINFO, "end end end end end!");
 	SAFE_PTHREAD_CREATE(&client_thr, NULL, client_thread, NULL);
 
 	SAFE_PTHREAD_JOIN(server_thr, NULL);
@@ -125,9 +145,13 @@ static void setup(void)
 	client_addr->sin_family = AF_INET;
 	client_addr->sin_addr.s_addr = htons(INADDR_ANY);
 
+	tst_res(TINFO, "client_addr->sin_addr.s_addr = %s",
+		inet_ntoa(client_addr->sin_addr));
+
 	addr_len = sizeof(struct sockaddr_in);
 
 	server_port = TST_GET_UNUSED_PORT(AF_INET, SOCK_STREAM);
+	tst_res(TINFO, "Starting listener on port: %d", server_port);
 	tst_res(TINFO, "Starting listener on port: %d", ntohs(server_port));
 }
 

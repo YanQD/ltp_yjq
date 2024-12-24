@@ -38,6 +38,8 @@ static void setup(void)
 		if (epoll_ctl(new_epfd, EPOLL_CTL_ADD, epfd, &events))
 			tst_brk(TBROK | TERRNO, "epoll_ctl(..., EPOLL_CTL_ADD, ...)");
 
+		tst_res(TINFO, "depth: %d, epfd: %d, new_epfd: %d", depth, epfd, new_epfd);
+		
 		epfd = new_epfd;
 	}
 }

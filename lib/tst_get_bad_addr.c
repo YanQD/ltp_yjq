@@ -24,6 +24,7 @@ void *tst_get_bad_addr(void (*cleanup_fn) (void))
 	void *bad_addr;
 
 	bad_addr = mmap(0, 1, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+	tst_resm(TINFO, "mmap() returned %p", bad_addr);
 	if (bad_addr == MAP_FAILED)
 		tst_brkm(TBROK, cleanup_fn, "mmap() failed to get bad address");
 

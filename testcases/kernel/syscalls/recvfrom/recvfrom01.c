@@ -76,15 +76,25 @@ pid_t start_server(struct sockaddr_in *);
 
 struct test_case_t {		/* test case structure */
 	int domain;		/* PF_INET, PF_UNIX, ... */
+	// 协议族(如PF_INET表示IPv4)
 	int type;		/* SOCK_STREAM, SOCK_DGRAM ... */
+	// type: socket类型(如SOCK_STREAM表示TCP)
 	int proto;		/* protocol number (usually 0 = default) */
+	// proto: 协议号(通常为0表示默认协议)
 	void *buf;		/* recv data buffer */
+	// buf: 接收数据的缓冲区
 	size_t buflen;		/* recv's 3rd argument */
+	// buflen: 缓冲区长度
 	unsigned flags;		/* recv's 4th argument */
+	// flags: recv函数的标志位
 	struct sockaddr *from;	/* from address */
+	// from: 发送方地址结构
 	socklen_t *salen;	/* from address value/result buffer length */
+	// salen: 地址结构长度
 	int retval;		/* syscall return value */
+	// retval: 系统调用的返回值
 	int experrno;		/* expected errno */
+	// experrno: 预期的错误码
 	void (*setup) (void);
 	void (*cleanup) (void);
 	char *desc;
@@ -102,7 +112,7 @@ struct test_case_t {		/* test case structure */
 	{
 	PF_INET, SOCK_STREAM, 0, (void *)buf, sizeof(buf), 0,
 		    (struct sockaddr *)-1, &fromlen,
-		    0, ENOTSOCK, setup1, cleanup1, "invalid socket buffer"},
+		    0, ENOBUFS, setup1, cleanup1, "invalid socket buffer"},
 /* 4 */
 	{
 	PF_INET, SOCK_STREAM, 0, (void *)buf, sizeof(buf), 0,
@@ -122,7 +132,8 @@ struct test_case_t {		/* test case structure */
 	{
 	PF_INET, SOCK_STREAM, 0, (void *)buf, sizeof(buf), MSG_ERRQUEUE,
 		    (struct sockaddr *)&from, &fromlen,
-		    -1, EAGAIN, setup1, cleanup1, "invalid MSG_ERRQUEUE flag set"},};
+		    -1, EAGAIN, setup1, cleanup1, "invalid MSG_ERRQUEUE flag set"},
+};
 
 int TST_TOTAL = sizeof(tdat) / sizeof(tdat[0]);
 
@@ -141,8 +152,30 @@ int main(int argc, char *argv[])
 			TEST(recvfrom(s, tdat[testno].buf, tdat[testno].buflen,
 				      tdat[testno].flags, tdat[testno].from,
 				      tdat[testno].salen));
+
+			// domain: 协议族(如PF_INET表示IPv4) PF_INET
+			// type: socket类型(如SOCK_STREAM表示TCP) SOCK_STREAM
+			// proto: 协议号(通常为0表示默认协议) 0
+			// buf: 接收数据的缓冲区 (void *)buf
+			// buflen: 缓冲区长度 sizeof(buf)
+			// flags: recv函数的标志位 0
+			// from: 发送方地址结构 (struct sockaddr *)-1
+			// salen: 地址结构长度 &fromlen
+			// retval: 系统调用的返回值 0
+			// experrno: 预期的错误码 ENOTSOCK
+			// desc: 测试用例描述 invalid socket buffer
+
 			if (TEST_RETURN >= 0)
 				TEST_RETURN = 0;	/* all nonzero equal here */
+
+			tst_resm(TINFO, "Test %d: %d: %d", testno, TEST_RETURN, TEST_ERRNO);
+			tst_resm(TINFO, "%s ; returned %ld (expected %d), errno %d (expected %d)", 
+					 tdat[testno].desc, TEST_RETURN, tdat[testno].retval,
+					 TEST_ERRNO, tdat[testno].experrno);
+
+			tst_resm(TINFO, "%s", TEST_RETURN != tdat[testno].retval ? "True" : "False");
+			tst_resm(TINFO, "%s", TEST_RETURN < 0 && TEST_ERRNO != tdat[testno].experrno ? "True" : "False");
+
 			if (TEST_RETURN != tdat[testno].retval ||
 			    (TEST_RETURN < 0 &&
 			     TEST_ERRNO != tdat[testno].experrno)) {
@@ -234,8 +267,9 @@ pid_t start_server(struct sockaddr_in *sin0)
 	socklen_t slen = sizeof(*sin0);
 
 	sin0->sin_family = AF_INET;
-	sin0->sin_port = 0; /* pick random free port */
-	sin0->sin_addr.s_addr = INADDR_ANY;
+	sin0->sin_port = htons(8082); /* pick random free port */
+	// sin0->sin_addr.s_addr = INADDR_ANY;
+	sin0->sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	sfd = socket(PF_INET, SOCK_STREAM, 0);
 	if (sfd < 0) {

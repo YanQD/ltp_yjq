@@ -23,7 +23,11 @@ static int do_select_faulty_to(int nfds, fd_set *readfds, fd_set *writefds,
 {
 	switch (tst_variant) {
 	case 0:
-		return select(nfds, readfds, writefds, exceptfds, timeout);
+		{
+			tst_res(TINFO, "select timeout %p", timeout);
+			return select(nfds, readfds, writefds, exceptfds, timeout);
+		}
+		
 	break;
 	case 1: {
 #ifdef __LP64__

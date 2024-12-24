@@ -49,7 +49,7 @@ int testno;
 
 static char buf[1024], bigbuf[128 * 1024];
 static int s;
-static struct sockaddr_in sin1;
+static struct sockaddr_in sin1, sin2;
 static int sfd;			/* shared between do_child and start_server */
 
 struct test_case_t {		/* test case structure */
@@ -100,6 +100,8 @@ static struct test_case_t tdat[] = {
 	 .cleanup = cleanup0,
 	 .desc = "invalid socket"}
 	,
+
+	// error
 	{.domain = PF_INET,
 	 .type = SOCK_STREAM,
 	 .proto = 0,
@@ -112,6 +114,7 @@ static struct test_case_t tdat[] = {
 	 .cleanup = cleanup1,
 	 .desc = "invalid send buffer"}
 	,
+
 	{.domain = PF_INET,
 	 .type = SOCK_DGRAM,
 	 .proto = 0,
@@ -124,6 +127,8 @@ static struct test_case_t tdat[] = {
 	 .cleanup = cleanup1,
 	 .desc = "UDP message too big"}
 	,
+
+	// error
 	{.domain = PF_INET,
 	 .type = SOCK_STREAM,
 	 .proto = 0,
@@ -136,6 +141,7 @@ static struct test_case_t tdat[] = {
 	 .cleanup = cleanup1,
 	 .desc = "local endpoint shutdown"}
 	,
+
 	{.domain = PF_INET,
 	 .type = SOCK_DGRAM,
 	 .proto = 0,
@@ -157,8 +163,9 @@ static pid_t start_server(struct sockaddr_in *sin0)
 	socklen_t slen = sizeof(*sin0);
 
 	sin0->sin_family = AF_INET;
-	sin0->sin_port = 0; /* pick random free port */
-	sin0->sin_addr.s_addr = INADDR_ANY;
+	sin0->sin_port = htons(8081); /* pick random free port */
+	// sin0->sin_addr.s_addr = INADDR_ANY;
+	sin0->sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	sfd = socket(PF_INET, SOCK_STREAM, 0);
 	if (sfd < 0) {
@@ -173,7 +180,7 @@ static pid_t start_server(struct sockaddr_in *sin0)
 		tst_brkm(TBROK | TERRNO, cleanup, "server listen failed");
 		return -1;
 	}
-	SAFE_GETSOCKNAME(cleanup, sfd, (struct sockaddr *)sin0, &slen);
+	// SAFE_GETSOCKNAME(cleanup, sfd, (struct sockaddr *)sin0, &slen);
 
 	switch ((pid = tst_fork())) {
 	case 0:
@@ -244,6 +251,8 @@ int main(int ac, char *av[])
 		tst_count = 0;
 
 		for (testno = 0; testno < TST_TOTAL; ++testno) {
+			tst_resm(TINFO, "Test %d: %s", testno, tdat[testno].desc);
+
 			tdat[testno].setup();
 
 			TEST(send(s, tdat[testno].buf, tdat[testno].buflen,

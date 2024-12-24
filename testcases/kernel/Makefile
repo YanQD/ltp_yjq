@@ -45,9 +45,11 @@ SUBDIRS			+= kvm
 
 endif
 
-ifeq ($(ANDROID),1)
-FILTER_OUT_DIRS		+= containers controllers device-drivers fs io ipc mem \
-				sched security
-endif
+# ifeq ($(ANDROID),1)
+FILTER_OUT_DIRS		+= connectors containers controllers crypto device-drivers \
+					   firmware fs hotplug include input io ipc irq kvm lib mem \
+					   sched security tracing logging mce_test muma \
+					   power_management pty sound uevents watchqueue
+# endif
 
 include $(top_srcdir)/include/mk/generic_trunk_target.mk

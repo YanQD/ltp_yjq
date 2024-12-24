@@ -73,6 +73,7 @@ static void setup(void)
 	listening_fd = create_listening_socket();
 
 	memset(conn_addr, 0, sizeof(*conn_addr));
+
 	SAFE_GETSOCKNAME(listening_fd, (struct sockaddr *)conn_addr, &slen);
 	conn_addr->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	tst_res(TINFO, "server listening on: %d", ntohs(conn_addr->sin_port));
@@ -107,13 +108,13 @@ static void verify_accept4(unsigned int nr)
 
 	switch (tst_variant) {
 	case 0:
-		TEST(accept4(listening_fd, (struct sockaddr *)accept_addr,
-			     &addrlen, flags));
-	break;
-	case 1:
 		TEST(tst_syscall(__NR_accept4, listening_fd,
 				 (struct sockaddr *)accept_addr,
 				 &addrlen, flags));
+	break;
+	case 1:
+		TEST(accept4(listening_fd, (struct sockaddr *)accept_addr,
+			     &addrlen, flags));
 	break;
 	case 2:
 		TEST(socketcall_accept4(listening_fd, (struct sockaddr *)accept_addr,
@@ -145,7 +146,7 @@ static void verify_accept4(unsigned int nr)
 	}
 
 	SAFE_CLOSE(acceptfd);
-	SAFE_CLOSE(connfd);
+	SAFE_CLOSE(connfd);	
 
 	if (fdf_pass && flf_pass) {
 		tst_res(TPASS, "Close-on-exec %d, nonblock %d",

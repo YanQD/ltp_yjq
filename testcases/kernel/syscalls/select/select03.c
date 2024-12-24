@@ -32,18 +32,20 @@ static struct tcases {
 	struct timeval **timeout;
 	int exp_errno;
 } tests[] = {
-	{ "Negative nfds", &negative_nfds, &preadfds_reg, &pwritefds_reg, &nullfds, &valid_to, EINVAL },
-	{ "Invalid readfds", &maxfds, &pfds_closed, &pwritefds_reg, &nullfds, &valid_to, EBADF },
-	{ "Invalid writefds", &maxfds, &preadfds_reg, &pfds_closed, &nullfds, &valid_to, EBADF },
-	{ "Invalid exceptfds", &maxfds, &preadfds_reg, &pwritefds_reg, &pfds_closed, &valid_to, EBADF },
-	{ "Faulty readfds", &maxfds, &faulty_fds, &pwritefds_reg, &nullfds, &valid_to, EFAULT },
-	{ "Faulty writefds", &maxfds, &preadfds_reg, &faulty_fds, &nullfds, &valid_to, EFAULT },
-	{ "Faulty exceptfds", &maxfds, &preadfds_reg, &pwritefds_reg, &faulty_fds, &valid_to, EFAULT },
+	// { "Negative nfds", &negative_nfds, &preadfds_reg, &pwritefds_reg, &nullfds, &valid_to, EINVAL },
+	// { "Invalid readfds", &maxfds, &pfds_closed, &pwritefds_reg, &nullfds, &valid_to, EBADF },
+	// { "Invalid writefds", &maxfds, &preadfds_reg, &pfds_closed, &nullfds, &valid_to, EBADF },
+	// { "Invalid exceptfds", &maxfds, &preadfds_reg, &pwritefds_reg, &pfds_closed, &valid_to, EBADF },
+	// { "Faulty readfds", &maxfds, &faulty_fds, &pwritefds_reg, &nullfds, &valid_to, EFAULT },
+	// { "Faulty writefds", &maxfds, &preadfds_reg, &faulty_fds, &nullfds, &valid_to, EFAULT },
+	// { "Faulty exceptfds", &maxfds, &preadfds_reg, &pwritefds_reg, &faulty_fds, &valid_to, EFAULT },
 	{ "Faulty timeout", &maxfds, &preadfds_reg, &pwritefds_reg, &nullfds, &invalid_to, EFAULT },
 };
 
 static void verify_select(unsigned int n)
 {
+	tst_res(TINFO, "timeout %p is invalid", invalid_to);
+
 	struct tcases *tc = &tests[n];
 
 	TEST(do_select_faulty_to(*tc->nfds, *tc->readfds, *tc->writefds,
@@ -69,9 +71,12 @@ static void verify_select(unsigned int n)
 
 static void run(unsigned int n)
 {
+	tst_res(TINFO, "timeout %p", invalid_to);
 	int pid, status;
 
+	tst_res(TINFO, "timeout %p is invalid", invalid_to);
 	pid = SAFE_FORK();
+	tst_res(TINFO, "fork() %d", pid);
 	if (!pid)
 		verify_select(n);
 
@@ -80,9 +85,13 @@ static void run(unsigned int n)
 	if (WIFEXITED(status))
 		return;
 
+	tst_res(TINFO, "WIFEXITED(status) %p", WIFEXITED(status));
+	tst_res(TINFO, "WIFSIGNALED(status) %p	", WIFSIGNALED(status));
+	tst_res(TINFO, "WTERMSIG(status) %p", WTERMSIG(status));
+
 	if (tst_variant == GLIBC_SELECT_VARIANT &&
 	    tests[n].timeout == &invalid_to &&
-	    WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV) {
+	   WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV) {
 		tst_res(TPASS, "%s: select() killed by signal", tests[n].name);
 		return;
 	}

@@ -17,6 +17,9 @@ int safe_pthread_create(const char *file, const int lineno,
 
 	rval = pthread_create(thread_id, attr, thread_fn, arg);
 
+	tst_res(TINFO, "safe_net pthread_create(%p, %p, %p, %p) = %d",
+		 thread_id, attr, thread_fn, arg, rval);
+
 	if (rval) {
 		tst_brk_(file, lineno, TBROK,
 			 "pthread_create(%p,%p,%p,%p) failed: %s", thread_id,
@@ -32,6 +35,8 @@ int safe_pthread_join(const char *file, const int lineno,
 	int rval;
 
 	rval = pthread_join(thread_id, retval);
+
+	tst_res(TINFO, "safe_net pthread_join(%p, %p) = %d", thread_id, retval, rval);
 
 	if (rval) {
 		tst_brk_(file, lineno, TBROK,

@@ -96,7 +96,10 @@ int tst_checkpoint_wait(unsigned int id, unsigned int msec_timeout)
 	timeout.tv_sec = msec_timeout/1000;
 	timeout.tv_nsec = (msec_timeout%1000) * 1000000;
 
+	tst_resm(TINFO, "tst_checkpoint_wait ret %d", ret);
+
 	do {
+		tst_resm(TINFO, "tst_checkpoint_wait ");
 		ret = syscall(SYS_futex, &tst_futexes[id], FUTEX_WAIT,
 			      tst_futexes[id], &timeout);
 	} while (ret == -1 && errno == EINTR);
@@ -146,6 +149,8 @@ void tst_safe_checkpoint_wait(const char *file, const int lineno,
 		msec_timeout = DEFAULT_MSEC_TIMEOUT;
 
 	ret = tst_checkpoint_wait(id, msec_timeout);
+
+	tst_resm(TINFO, "tst_checkpoint_wait(%u, %i) = %d", id, msec_timeout, ret);
 
 	if (ret) {
 		tst_brkm_(file, lineno, TBROK | TERRNO, cleanup_fn,

@@ -174,7 +174,8 @@ void setup(void)
 	sin2.sin_family = AF_INET;
 	/* this port must be unused! */
 	sin2.sin_port = TST_GET_UNUSED_PORT(NULL, AF_INET, SOCK_STREAM);
-	sin2.sin_addr.s_addr = INADDR_ANY;
+	// sin2.sin_addr.s_addr = INADDR_ANY;
+	sin2.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	sin3.sin_family = AF_INET;
 	sin3.sin_port = 0;
@@ -232,8 +233,9 @@ pid_t start_server(struct sockaddr_in *sin0)
 	socklen_t slen = sizeof(*sin0);
 
 	sin0->sin_family = AF_INET;
-	sin0->sin_port = 0; /* pick random free port */
-	sin0->sin_addr.s_addr = INADDR_ANY;
+	sin0->sin_port = htons(8082); /* pick random free port */
+	// sin0->sin_addr.s_addr = INADDR_ANY;
+	sin0->sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	sfd = socket(PF_INET, SOCK_STREAM, 0);
 	if (sfd < 0) {

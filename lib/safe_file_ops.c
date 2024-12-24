@@ -355,6 +355,8 @@ int safe_touch(const char *file, const int lineno,
 
 	defmode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
 
+	tst_resm(TINFO, "sub checkpoint01");
+
 	ret = open(pathname, O_CREAT | O_WRONLY, defmode);
 
 	if (ret == -1) {
@@ -367,6 +369,8 @@ int safe_touch(const char *file, const int lineno,
 		return ret;
 	}
 
+	tst_resm(TINFO, "sub checkpoint02");
+	
 	ret = close(ret);
 
 	if (ret == -1) {
@@ -378,6 +382,8 @@ int safe_touch(const char *file, const int lineno,
 			"Invalid close('%s') return value %d", pathname, ret);
 		return ret;
 	}
+
+	tst_resm(TINFO, "sub checkpoint03");
 
 	if (mode != 0) {
 		ret = chmod(pathname, mode);
@@ -394,6 +400,7 @@ int safe_touch(const char *file, const int lineno,
 		}
 	}
 
+	tst_resm(TINFO, "sub checkpoint04");
 
 #ifdef HAVE_UTIMENSAT
 	ret = utimensat(AT_FDCWD, pathname, times, 0);
